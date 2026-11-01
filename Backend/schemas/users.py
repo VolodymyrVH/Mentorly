@@ -12,10 +12,10 @@ class UserRole(str, Enum):
 class UserCreateSchema(BaseModel):
     firstname: str = Field(min_length=1, max_length=100)
     lastname: str = Field(min_length=1, max_length=100)
-    password_hash: str = Field(min_length=8)
+    password: str = Field(min_length=8)
     email: EmailStr = Field(max_length=255)
     phone: str = Field(min_length=10, max_length=15)
-    profile_picture: str = Field(max_length=255)
+    profile_picture: str | None = Field(max_length=255)
     dob: date
 
     @field_validator("dob")
@@ -35,17 +35,21 @@ class UserLoginSchema(BaseModel):
 class UserUpdateSchema(BaseModel):
     firstname: str | None = Field(None, min_length=1, max_length=100)
     lastname: str | None = Field(None, min_length=1, max_length=100)
-    password_hash: str | None = Field(None, min_length=8)
-    email: EmailStr | None = Field(None, max_length=255)
+    password: str | None = Field(None, min_length=8)
+    email: EmailStr | None = None
     phone: str | None = Field(None, min_length=10, max_length=15)
     profile_picture: str | None = Field(None, max_length=255)
     dob: date | None = None
 
 
+class UserRoleUpdateSchame(BaseModel):
+    role: UserRole
+
+
 class UserResponseSchema(BaseModel):
+    id: int
     firstname: str
     lastname: str
-    password_hash: str
     email: str
     phone: str
     profile_picture: str

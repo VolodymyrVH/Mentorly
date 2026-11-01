@@ -5,14 +5,18 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from core.database import init_db
+from api import auth, users
+
+from models.users import *
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
 
-
 app = FastAPI(lifespan=lifespan)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,6 +25,12 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+app.include_router(auth.router)
+app.include_router(users.router)
 
 @app.get("/")
 def read_root():
