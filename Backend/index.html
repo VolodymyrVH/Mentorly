@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mentorly API — тестування</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#182230;background:#f4f6f9}
+body{max-width:1100px;margin:24px auto;padding:0 16px}
+h1{margin-bottom:6px} .muted{color:#667085}
+.card{background:white;border:1px solid #dce2ea;border-radius:12px;padding:18px;margin:16px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+label{display:block;font-size:14px;margin:9px 0 4px}
+input,select,textarea{width:100%;box-sizing:border-box;padding:9px;border:1px solid #cbd5e1;border-radius:7px;font:inherit}
+button{margin-top:12px;padding:9px 13px;border:0;border-radius:7px;background:#2457c5;color:white;cursor:pointer}
+button.secondary{background:#475467} button.danger{background:#b42318}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101828;color:#e4e7ec;padding:14px;border-radius:8px;min-height:80px}
+small{color:#667085}
+</style>
+</head>
+<body>
+<h1>Mentorly — API tester</h1>
+<p class="muted">Пробна сторінка для перевірки FastAPI запитів. Запусти backend і відкрий цей файл у браузері.</p>
+
+<section class="card">
+<h2>Підключення</h2>
+<label>API base URL</label><input id="base" value="http://127.0.0.1:8000">
+<label>Bearer token (заповнюється після входу)</label><input id="token" placeholder="JWT token">
+<small>Якщо браузер блокує запити через CORS, додай origin сторінки до allow_origins або відкрий HTML через локальний dev server.</small>
+</section>
+
+<section class="card">
+<h2>1. Реєстрація</h2>
+<div class="grid">
+<div><label>Ім'я</label><input id="regFirst" value="Test"></div>
+<div><label>Прізвище</label><input id="regLast" value="User"></div>
+<div><label>Email</label><input id="regEmail" type="email" value="test@example.com"></div>
+<div><label>Телефон</label><input id="regPhone" value="+9999999999999"></div>
+<div><label>Пароль</label><input id="regPassword" type="password" value="TestPassword123!"></div>
+<div><label>Дата народження</label><input id="regDob" type="date"></div>
+<div><label>Фото профілю URL (необов'язково)</label><input id="regPic" placeholder="https://..."></div>
+</div>
+<button onclick="registerUser()">POST /users/</button>
+</section>
+
+<section class="card">
+<h2>2. Вхід</h2>
+<div class="grid">
+<div><label>Email або телефон</label><input id="login" value="test@example.com"></div>
+<div><label>Пароль</label><input id="loginPassword" type="password" value="TestPassword123!"></div>
+</div>
+<button onclick="loginUser()">POST /auth/token</button>
+</section>
+
+<section class="card">
+<h2>3. Поточний користувач</h2>
+<button onclick="request('/users/me','GET')">GET /users/me</button>
+</section>
+
+<section class="card">
+<h2>4. Список користувачів (admin)</h2>
+<button onclick="request('/users/','GET')">GET /users/</button>
+</section>
+
+<section class="card">
+<h2>5. Отримати користувача за ID (admin)</h2>
+<label>User ID</label><input id="userId" type="number" value="1">
+<button onclick="request('/users/'+val('userId'),'GET')">GET /users/{id}</button>
+</section>
+
+<section class="card">
+<h2>6. Оновити користувача</h2>
+<p class="muted">Надсилаються лише заповнені поля.</p>
+<div class="grid">
+<div><label>Ім'я</label><input id="updFirst"></div>
+<div><label>Прізвище</label><input id="updLast"></div>
+<div><label>Email</label><input id="updEmail" type="email"></div>
+<div><label>Телефон</label><input id="updPhone"></div>
+<div><label>Новий пароль</label><input id="updPassword" type="password"></div>
+<div><label>Фото профілю URL</label><input id="updPic"></div>
+</div>
+<button onclick="updateUser()">PATCH /users/{id}</button>
+</section>
+
+<section class="card">
+<h2>7. Змінити роль (admin)</h2>
+<label>Роль</label><select id="newRole"><option>USER</option><option>MENTOR</option><option>ADMIN</option></select>
+<button onclick="changeRole()">PATCH /users/{id}/role</button>
+</section>
+
+<section class="card">
+<h2>8. Видалити користувача</h2>
+<button class="danger" onclick="deleteUser()">DELETE /users/{id}</button>
+</section>
+
+<section class="card">
+<h2>Відповідь сервера</h2><pre id="output">Тут з'явиться статус і відповідь API.</pre>
+</section>
+
+<script>
+const val=id=>document.getElementById(id).value.trim();
+const base=()=>val('base').replace(/\/+$/,'');
+function show(text){document.getElementById('output').textContent=text}
+async function request(path,method='GET',body=null,form=false){
+  const headers={};
+  if(!form && body!==null) headers['Content-Type']='application/json';
+  if(val('token')) headers['Authorization']='Bearer '+val('token');
+  try{
+    const res=await fetch(base()+path,{method,headers,body:body===null?undefined:(form?body:JSON.stringify(body))});
+    const text=await res.text(); let data=text;
+    try{data=text?JSON.stringify(JSON.parse(text),null,2):'(порожня відповідь)'}catch{}
+    show(`${method} ${path}\nHTTP ${res.status} ${res.statusText}\n\n${data}`);
+    return {res,text};
+  }catch(e){show('Помилка запиту: '+e.message+'\nПеревір, чи запущений backend і чи налаштований CORS.');}
+}
+async function registerUser(){
+  const payload={firstname:val('regFirst'),lastname:val('regLast'),email:val('regEmail'),phone:val('regPhone'),password:val('regPassword')};
+  if(val('regDob'))payload.dob=val('regDob');
+  if(val('regPic'))payload.profile_picture=val('regPic');
+  await request('/users/','POST',payload);
+}
+async function loginUser(){
+  const form=new URLSearchParams();
+  form.append('username',val('login'));form.append('password',val('loginPassword'));
+  const result=await request('/auth/token','POST',form,true);
+  if(result && result.res.ok){
+    try{const data=JSON.parse(result.text);if(data.access_token)document.getElementById('token').value=data.access_token;}catch{}
+  }
+}
+async function updateUser(){
+  const payload={};
+  for(const [field,id] of [['firstname','updFirst'],['lastname','updLast'],['email','updEmail'],['phone','updPhone'],['password','updPassword'],['profile_picture','updPic']]){
+    if(val(id))payload[field]=val(id);
+  }
+  if(!Object.keys(payload).length){show('Заповни хоча б одне поле для оновлення.');return}
+  await request('/users/'+val('userId'),'PATCH',payload);
+}
+async function changeRole(){
+  await request('/users/'+val('userId')+'/role','PATCH',{role:val('newRole')});
+}
+async function deleteUser(){
+  if(!confirm('Точно видалити користувача з ID '+val('userId')+'?'))return;
+  await request('/users/'+val('userId'),'DELETE');
+}
+</script>
+</body>
+</html>

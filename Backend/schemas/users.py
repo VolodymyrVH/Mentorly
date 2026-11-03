@@ -15,7 +15,7 @@ class UserCreateSchema(BaseModel):
     password: str = Field(min_length=8)
     email: EmailStr = Field(max_length=255)
     phone: str = Field(min_length=10, max_length=15)
-    profile_picture: str | None = Field(max_length=255)
+    profile_picture: str | None = Field(default=None, max_length=255)
     dob: date
 
     @field_validator("dob")
@@ -28,7 +28,7 @@ class UserCreateSchema(BaseModel):
 
 
 class UserLoginSchema(BaseModel):
-    login: str = Field(min_length=1, max_length=255) #add check phone or email
+    login: str = Field(min_length=1, max_length=255)
     password: str = Field(min_length=8)
 
 
@@ -52,7 +52,7 @@ class UserResponseSchema(BaseModel):
     lastname: str
     email: str
     phone: str
-    profile_picture: str
+    profile_picture: str | None = None
     role: UserRole
     dob: date
     created_at: datetime

@@ -19,7 +19,7 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     email = Column(String(255), nullable=False, unique=True, index=True)
     phone = Column(String(20), nullable=False, unique=True, index=True)
-    profile_picture = Column(String(255))
+    profile_picture = Column(String(255), nullable=True)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.USER)
     dob = Column(Date, nullable=False)
     created_at = Column(TIMESTAMP, server_default=func.now())
