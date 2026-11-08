@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, TIMESTAMP, func, Date, Enum, CheckConstraint
+from sqlalchemy.orm import relationship
 from enum import Enum as PyEnum
 
 from core.database import Base
@@ -28,3 +29,5 @@ class User(Base):
     __table_args__ = (
         CheckConstraint("length(phone) >= 10", name="phone_length"),
     )
+
+    mentor_discipline = relationship("MentorDiscipline", back_populates="user", cascade="all, delete-orphan")
