@@ -18,6 +18,7 @@ class MentorDisciplineResponseSchema(BaseModel):
     id: int
     mentor_id: int
     discipline_id: int
+    discipline_name: str
     price: Decimal
     duration_in_minutes: int
 
