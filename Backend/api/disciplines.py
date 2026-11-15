@@ -30,7 +30,7 @@ def get_by_id(discpline_id: int, db: Session = Depends(get_db)):
     return discpline_db
 
 
-@router.post("/",response_model=DisciplineResponseSchema,)
+@router.post("/",response_model=DisciplineResponseSchema)
 def create_discipline(discipline: DisciplineCreateSchema,db: Session = Depends(get_db),current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403,detail="Not enough permissions")
