@@ -23,3 +23,38 @@ class MentorDisciplineResponseSchema(BaseModel):
     duration_in_minutes: int
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class MentorProfileCreateSchema(BaseModel):
+    bio: str | None = None
+    degree: str | None = None
+    experience_years: int | None = Field(default=None, ge=0)
+
+
+class MentorProfileUpdateSchema(BaseModel):
+    bio: str | None = None
+    degree: str | None = None
+    experience_years: int | None = Field(default=None, ge=0)
+
+    
+class MentorProfileResponseSchema(BaseModel):
+    id: int
+    mentor_id: int
+
+    firstname: str
+    lastname: str
+    email: str
+    profile_picture: str | None
+
+    bio: str | None
+    degree: str | None
+    experience_years: int | None
+    rating: Decimal
+    review_count: int
+    approval_status: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class MentorProfileApprovalSchema(BaseModel):
+    approval_status: bool

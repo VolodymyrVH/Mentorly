@@ -121,3 +121,117 @@ def delete_mentor_discipline(mentor_discipline_id: int, db: Session = Depends(ge
     db.commit()
 
     return {"detail": "Mentor discipline deleted successfully"}
+
+
+@router.get("/mentor-profiles/{mentor_id}",response_model=MentorProfileResponseSchema)
+def get_mentor_profile(mentor_id: int,db: Session = Depends(get_db)):
+    return get_mentor_profile_data(mentor_id, db)
+
+
+def get_mentor_profile_data(mentor_id: int, db: Session):
+    profile = (
+        db.query(
+            MentorProfiles.id,
+            MentorProfiles.mentor_id,
+            User.firstname,
+            User.lastname,
+            User.email,
+            User.profile_picture,
+            MentorProfiles.bio,
+            MentorProfiles.degree,
+            MentorProfiles.experience_years,
+            MentorProfiles.rating,
+            MentorProfiles.review_count,
+            MentorProfiles.approval_status
+        )
+        .join(User, MentorProfiles.mentor_id == User.id)
+        .filter(MentorProfiles.mentor_id == mentor_id)
+        .first()
+    )
+
+    if not profile:
+        raise HTTPException(status_code=404, detail="Mentor profile not found")
+
+    return dict(profile._mapping)
+
+
+@router.post("/mentor-profiles/", response_model=MentorProfileResponseSchema, status_code=201)
+def create_mentor_profile(data: MentorProfileCreateSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.MENTOR:
+        raise HTTPException(status_code=403, detail="Only mentors can create mentor profiles")
+
+    existing_profile = db.query(MentorProfiles).filter(MentorProfiles.mentor_id == current_user.id).first()
+    if existing_profile:
+        raise HTTPException(status_code=409, detail="Mentor profile already exists")
+
+    mentor_profile = MentorProfiles(
+        mentor_id=current_user.id,
+        bio=data.bio,
+        degree=data.degree,
+        experience_years=data.experience_years,
+        rating=0,
+        review_count=0,
+        approval_status=False
+    )
+
+    db.add(mentor_profile)
+    db.commit()
+    db.refresh(mentor_profile)
+
+    return get_mentor_profile_data(mentor_profile.mentor_id, db)
+
+
+@router.patch("/mentor-profiles/me", response_model=MentorProfileResponseSchema)
+def update_mentor_profile(data: MentorProfileUpdateSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    mentor_profile_db = db.query(MentorProfiles).filter(MentorProfiles.mentor_id == current_user.id).first()
+    if not mentor_profile_db:
+        raise HTTPException(status_code=404, detail="Mentor profile not found")
+
+    if current_user.role != UserRole.MENTOR:
+        raise HTTPException(status_code=403, detail="Only mentors can update their profiles")
+
+    update_data = data.model_dump(exclude_unset=True)
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No data provided")
+
+    for key, value in update_data.items():
+        setattr(mentor_profile_db, key, value)
+
+    mentor_profile_db.approval_status = False
+
+    db.commit()
+
+    return get_mentor_profile_data(current_user.id, db)
+
+
+@router.patch("/mentor-profiles/{mentor_id}/approval", response_model=MentorProfileResponseSchema)
+def update_mentor_approval_status(mentor_id: int, user_approval: MentorProfileApprovalSchema, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not enough permissions")
+
+    mentor_profile_db = db.query(MentorProfiles).filter(MentorProfiles.mentor_id == mentor_id).first()
+
+    if not mentor_profile_db:
+        raise HTTPException(status_code=404, detail="Mentor profile not found")
+
+    mentor_profile_db.approval_status = user_approval.approval_status
+
+    db.commit()
+
+    return get_mentor_profile_data(mentor_id, db)
+
+
+@router.delete("/mentor-profiles/{mentor_id}", status_code=204)
+def delete_mentor_profile(mentor_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if (current_user.role != UserRole.ADMIN and current_user.id != mentor_id):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this profile")
+
+    mentor_profile_db = db.query(MentorProfiles).filter(MentorProfiles.mentor_id == mentor_id).first()
+
+    if not mentor_profile_db:
+        raise HTTPException(status_code=404, detail="Mentor profile not found")
+
+    db.delete(mentor_profile_db)
+    db.commit()
+
+    return None

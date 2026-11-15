@@ -31,3 +31,4 @@ class User(Base):
     )
 
     mentor_discipline = relationship("MentorDiscipline", back_populates="user", cascade="all, delete-orphan")
+    mentor_profile = relationship("MentorProfiles", back_populates="mentor", uselist=False, cascade="all, delete-orphan")
