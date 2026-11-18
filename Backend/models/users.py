@@ -32,3 +32,6 @@ class User(Base):
 
     mentor_discipline = relationship("MentorDiscipline", back_populates="user", cascade="all, delete-orphan")
     mentor_profile = relationship("MentorProfiles", back_populates="mentor", uselist=False, cascade="all, delete-orphan")
+
+    session_mentor = relationship("Session", back_populates="mentor", foreign_keys="Session.mentor_id")
+    session_student = relationship("Session", back_populates="student", foreign_keys="Session.student_id")

@@ -11,3 +11,4 @@ class Discipline(Base):
     name = Column(String(100), nullable=False, unique=True)
 
     mentor_discipline = relationship("MentorDiscipline", back_populates="discipline", cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="discipline")
