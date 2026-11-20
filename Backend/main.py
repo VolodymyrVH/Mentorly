@@ -5,11 +5,12 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 
 from core.database import init_db
-from api import auth, users, disciplines, mentors
+from api import auth, users, disciplines, mentors, sessions
 
 from models.users import *
 from models.disciplines import *
 from models.mentors import *
+from models.sessions import *
 
 
 @asynccontextmanager
@@ -35,6 +36,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(disciplines.router)
 app.include_router(mentors.router)
+app.include_router(sessions.router)
 
 @app.get("/")
 def read_root():
